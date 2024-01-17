@@ -13,11 +13,11 @@ int main() {
   printf("Please enter 2 binary strings with 4 digits:\n");
   printf("Binary 1: ");
 
-  short int bin1;
+  unsigned short int bin1;
   scanf("%hd", &bin1);
 
   printf("Binary 2: ");
-  short int bin2;
+  unsigned short int bin2;
   scanf("%hd", &bin2);
   // Printing the xor of the numbers
   printf("%04hd\n^\n%04hd\n", bin1, bin2);
@@ -35,16 +35,16 @@ int main() {
   printf("Please enter 2 hexadecimal numbers:\n");
   printf("Hex 1: ");
 
-  int hex1;
+  unsigned int hex1;
   scanf("%X", &hex1);
 
   printf("Hex 2: ");
-  int hex2;
+  unsigned int hex2;
   scanf("%X", &hex2);
 
   printf("\n");
 
-  int sum = hex1 + hex2;
+  int unsigned sum = hex1 + hex2;
   // Printing the calculation of the sum
   printf("%X + %X = %X\n", hex1, hex2, sum);
   printf("The last 4 binary digits of the sum are ");
@@ -63,7 +63,7 @@ int main() {
   printf("Exercise 3:\n");
   printf("Choose a base between 2 to 9: ");
 
-  short int myBase;
+  unsigned short int myBase;
   scanf("%hu", &myBase);
   printf("Enter a 5 digit number using that base: ");
 
@@ -88,7 +88,7 @@ int main() {
   printf("Exercise 4:\n");
   printf("Enter a number: ");
 
-  int number;
+  unsigned int number;
   scanf("%d", &number);
   printf("I want to know the value of bit number: ");
 
@@ -97,7 +97,7 @@ int main() {
   printf("\n");
 
   // Creating the mask for the bit calculation
-  short int mask = pow(2, bitIndex - 1);
+  unsigned int mask = pow(2, bitIndex - 1);
   // Claculating the choosen bit
   short int choosenBit = (number & mask) / mask;
 
