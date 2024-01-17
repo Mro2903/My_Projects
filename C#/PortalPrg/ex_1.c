@@ -1,8 +1,8 @@
-/******************************************************************************
+/********************************************************************************************************************
 Omri Bareket
 216718726
 Assingment 1
-*******************************************************************************/
+********************************************************************************************************************/
 
 #include <math.h>
 #include <stdio.h>
@@ -16,7 +16,7 @@ int main() {
   unsigned short int bin1;
   scanf("%hd", &bin1);
 
-  printf("Binary 2: ");
+  printf("Binary 2:\n");
   unsigned short int bin2;
   scanf("%hd", &bin2);
   // Printing the xor of the numbers
@@ -32,13 +32,13 @@ int main() {
 
   // Exercise 2- The stange case of hexa
   printf("Exercise 2:\n");
-  printf("Please enter 2 hexadecimal numbers:\n");
+  printf("Enter 2 hexadecimal numbers:\n");
   printf("Hex 1: ");
 
   unsigned int hex1;
   scanf("%X", &hex1);
 
-  printf("Hex 2: ");
+  printf("Hex 2:");
   unsigned int hex2;
   scanf("%X", &hex2);
 
@@ -69,6 +69,7 @@ int main() {
 
   unsigned short int num;
   scanf("%hu", &num);
+  unsigned short int num_tmp = num;
   // Claculating and converting between the bases
   unsigned short int decimalValue = (num % 10) * pow(myBase, 0);
   num /= 10;
@@ -80,7 +81,7 @@ int main() {
   num /= 10;
   decimalValue = decimalValue + (num % 10) * pow(myBase, 4);
 
-  printf("The decimal value of %hu in base %hd is %hu\n", num, myBase, decimalValue);
+  printf("The decimal value of %hu in base %hd is %hu\n", num_tmp, myBase, decimalValue);
 
   printf("\n");
 
@@ -90,7 +91,7 @@ int main() {
 
   unsigned int number;
   scanf("%d", &number);
-  printf("I want to know the value of bit number: ");
+  printf("I want to know the value of bit number:");
 
   short int bitIndex;
   scanf("%hd", &bitIndex);
