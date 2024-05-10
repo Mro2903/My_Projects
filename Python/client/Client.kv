@@ -1,0 +1,437 @@
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+Screen:
+    MDScreenManager:
+        id: screen_manager_authentication
+        Screen:
+            name: "Login"
+            id: Login
+            MDCard:
+                size_hint: None, None
+                size: "300dp", "300dp"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                elevation: 10
+                padding: "25dp"
+                spacing: "25dp"
+                orientation: "vertical"
+
+                MDLabel:
+                    text: "Login"
+                    theme_text_color: "Secondary"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
+
+                MDTextField:
+                    id: l_username
+                    hint_text: "Username"
+                    helper_text_mode: "on_focus"
+                    icon_right: "account"
+                    icon_right_color: app.theme_cls.primary_color
+
+                MDTextField:
+                    id: l_password
+                    hint_text: "Password"
+                    helper_text_mode: "on_focus"
+                    icon_right: "eye-off"
+                    icon_right_color: app.theme_cls.primary_color
+                    password: True
+
+                MDFillRoundFlatButton:
+                    text: "Login"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.login(l_username.text, l_password.text)
+                    #root.ids.screen_manager_authentication.current = "Home"
+
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: "10dp"
+
+                    MDFillRoundFlatButton:
+                        text: "Sign Up"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "SignUp")
+
+                    MDFillRoundFlatButton:
+                        text: "Forgot Password"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "ForgotPassword")
+
+        Screen:
+            name: "SignUp"
+            id: signup
+            MDCard:
+                size_hint: None, None
+                size: "300dp", "500dp"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                elevation: 10
+                padding: "25dp"
+                spacing: "25dp"
+                orientation: "vertical"
+
+                MDLabel:
+                    text: "Sign Up"
+                    theme_text_color: "Secondary"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
+
+                MDTextField:
+                    id: s_username
+                    hint_text: "Username"
+                    helper_text_mode: "on_focus"
+                    icon_right: "account"
+                    icon_right_color: app.theme_cls.primary_color
+
+                MDTextField:
+                    id: s_email
+                    hint_text: "Email"
+                    helper_text_mode: "on_focus"
+                    icon_right: "gmail"
+                    icon_right_color: app.theme_cls.primary_color
+
+                MDTextField:
+                    id: s_password
+                    hint_text: "Password"
+                    helper_text_mode: "on_focus"
+                    icon_right: "eye-off"
+                    icon_right_color: app.theme_cls.primary_color
+                    password: True
+
+                MDTextField:
+                    id: s_renter_password
+                    hint_text: "Renter Password"
+                    helper_text_mode: "on_focus"
+                    icon_right: "eye-off"
+                    icon_right_color: app.theme_cls.primary_color
+                    password: True
+
+                MDFillRoundFlatButton:
+                    text: "Sign Up"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.sign_up(s_username.text, s_email.text, s_password.text, s_renter_password.text)
+
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: "10dp"
+
+                    MDFillRoundFlatButton:
+                        text: "Login"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "Login")
+
+                    MDFillRoundFlatButton:
+                        text: "Forgot Password"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "ForgotPassword")
+
+
+        Screen:
+            name: "ForgotPassword"
+            id: ForgotPassword
+            MDCard:
+                size_hint: None, None
+                size: "300dp", "230dp"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                elevation: 10
+                padding: "25dp"
+                spacing: "25dp"
+                orientation: "vertical"
+
+                MDLabel:
+                    text: "Forgot Password"
+                    theme_text_color: "Secondary"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
+
+                MDTextField:
+                    id: f_username
+                    hint_text: "Username"
+                    helper_text_mode: "on_focus"
+                    icon_right: "account"
+                    icon_right_color: app.theme_cls.primary_color
+
+                MDFillRoundFlatButton:
+                    text: "Forgot Password"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.forgot_password(f_username.text)
+
+                MDBoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: "80dp"
+
+                    MDFillRoundFlatButton:
+                        text: "Login"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "Login")
+
+                    MDFillRoundFlatButton:
+                        text: "Sign Up"
+                        font_size: "16sp"
+                        pos_hint: {"center_x": .5}
+                        on_press: app.change_screen("screen_manager_authentication", "SignUp")
+
+        Screen:
+            name: "TFA"
+            id: TFA
+            MDCard:
+                size_hint: None, None
+                size: "300dp", "230dp"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                elevation: 10
+                padding: "25dp"
+                spacing: "25dp"
+                orientation: "vertical"
+
+                MDLabel:
+                    text: "Two Factor Authentication"
+                    theme_text_color: "Secondary"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
+
+                MDTextField:
+                    id: code
+                    hint_text: "Code"
+                    helper_text_mode: "on_focus"
+                    icon_right: "code"
+                    icon_right_color: app.theme_cls.primary_color
+
+                MDFillRoundFlatButton:
+                    text: "Verify"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.submit_code(code.text)
+
+                MDFillRoundFlatButton:
+                    text: "Cancel"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.cancel()
+
+        Screen:
+            name: "ChangePassword"
+            id: ChangePassword
+            MDCard:
+                size_hint: None, None
+                size: "300dp", "300dp"
+                pos_hint: {"center_x": .5, "center_y": .5}
+                elevation: 10
+                padding: "25dp"
+                spacing: "25dp"
+                orientation: "vertical"
+
+                MDLabel:
+                    text: "Change Password"
+                    theme_text_color: "Secondary"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
+
+                MDTextField:
+                    id: c_password
+                    hint_text: "Password"
+                    helper_text_mode: "on_focus"
+                    icon_right: "eye-off"
+                    icon_right_color: app.theme_cls.primary_color
+                    password: True
+
+                MDTextField:
+                    id: c_renter_password
+                    hint_text: "Renter Password"
+                    helper_text_mode: "on_focus"
+                    icon_right: "eye-off"
+                    icon_right_color: app.theme_cls.primary_color
+                    password: True
+
+                MDFillRoundFlatButton:
+                    text: "Submit"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.change_password(c_password.text, c_renter_password.text)
+
+                MDFillRoundFlatButton:
+                    text: "Cancel"
+                    font_size: "16sp"
+                    pos_hint: {"center_x": .5}
+                    on_press: app.cancel()
+
+        Screen:
+            name: "Home"
+            id: Home
+            MDBoxLayout:
+                orientation: "vertical"
+                MDTopAppBar:
+                    title: "ROIM"
+                    specific_text_color: 1, 1, 1, 1
+                    left_action_items: [["twitch", lambda x: app.refresh_feed()], ["human", lambda x: app.get_profile(app.username)]]
+                    right_action_items: [["magnify", lambda x: app.change_screen("screen_manager_home", "Search")], ["logout", lambda x: app.cancel()]]
+                MDScreenManager:
+                    id: screen_manager_home
+                    Screen:
+                        name: "Feed"
+                        id: Feed
+                        MDScrollView:
+                            MDList:
+                                name: "Feed_list"
+                                id: Feed_list
+
+
+                    Screen:
+                        name: "Profile"
+                        id: Profile
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            TwoLineAvatarListItem:
+                                size_hint_y: 0.2
+                                id: profile_info
+                                text: "Username"
+                                secondary_text: "Description"
+                                ImageLeftWidget:
+                                    id: profile_image
+                                    source: "data/logo/kivy-icon-256.png"
+                            MDBoxLayout:
+                                orientation: "horizontal"
+                                size_hint_y: 0.2
+                                spacing: "10dp"
+                                MDLabel:
+                                    id: followers
+                                    text: "Followers: 0"
+                                    font_size: "16sp"
+                                    pos_hint: {"center_x": .5}
+                                MDLabel:
+                                    id: following
+                                    text: "Following: 0"
+                                    font_size: "16sp"
+                                    pos_hint: {"center_x": .5}
+                            MDBoxLayout:
+                                orientation: "horizontal"
+                                size_hint_y: 0.2
+                                spacing: "10dp"
+                                MDFillRoundFlatButton:
+                                    text: "Follow"
+                                    font_size: "16sp"
+                                    pos_hint: {"center_x": .5}
+                                    on_press: app.follow(root.ids.profile_info.text)
+                                MDFillRoundFlatButton:
+                                    text: "Unfollow"
+                                    font_size: "16sp"
+                                    pos_hint: {"center_x": .5}
+                                    on_press: app.unfollow(root.ids.profile_info.text)
+                            MDFillRoundFlatButton:
+                                text: "Stream"
+                                font_size: "16sp"
+                                pos_hint: {"center_x": .5}
+                                on_press: app.change_screen("screen_manager_authentication", "Stream")
+                    Screen:
+                        id: Search
+                        name: "Search"
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            MDTextField:
+                                id: search
+                                hint_text: "Search"
+                                helper_text_mode: "on_focus"
+                                icon_right: "magnify"
+                                icon_right_color: app.theme_cls.primary_color
+                            MDFillRoundFlatButton:
+                                text: "Search"
+                                font_size: "16sp"
+                                pos_hint: {"center_x": .5}
+                                on_press: app.get_profile(search.text)
+        Screen:
+            name: "Stream"
+            id: Stream
+            MDBoxLayout:
+                orientation: "vertical"
+                MDTopAppBar:
+                    title: "Stream"
+                    specific_text_color: 1, 1, 1, 1
+                    left_action_items: [["arrow-left", lambda x: app.stop_stream()]]
+                MDScreenManager:
+                    id: screen_manager_stream
+                    Screen:
+                        name: "Preview"
+                        id: Preview
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            MDLabel:
+                                text: "Stream"
+                                font_size: "24sp"
+                                halign: "center"
+                                size_hint_y: None
+                                height: self.texture_size[1]
+                                padding_y: "15dp"
+                            MDTextField:
+                                id: title
+                                hint_text: "Title"
+                                helper_text_mode: "on_focus"
+                                icon_right: "pencil"
+                                icon_right_color: app.theme_cls.primary_color
+                            MDFillRoundFlatButton:
+                                text: "Start Stream"
+                                font_size: "16sp"
+                                pos_hint: {"center_x": .5}
+                                on_press: app.stream(title.text)
+                    Screen:
+                        name: "Stream_view"
+                        id: Stream_view
+                        MDBoxLayout:
+                            name: "Stream_video"
+                            id: Stream_video
+                            orientation: "vertical"
+                            MDLabel:
+                                text: "Stream"
+                                font_size: "24sp"
+                                halign: "center"
+                                size_hint_y: None
+                                height: self.texture_size[1]
+                                padding_y: "15dp"
+
+        Screen:
+            name: "Watch"
+            id: Watch
+            MDBoxLayout:
+                id: Watch_layout
+                name: "Watch_layout"
+                orientation: "vertical"
+                MDTopAppBar:
+                    title: "Watch"
+                    specific_text_color: 1, 1, 1, 1
+                    left_action_items: [["arrow-left", lambda x: app.stop_watch()]]
+
+
+
+<Description>
+    spacing: "12dp"
+    height: "120dp"
+    MDTextField:
+        id: description
+        pos_hint: {"center_x": .5, "center_y": .5}
+        helper_text_mode: "on_focus"
+        icon_right: "pencil"
+        icon_right_color: app.theme_cls.primary_color
