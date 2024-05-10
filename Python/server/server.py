@@ -160,7 +160,6 @@ def start_stream(username, title, ip):
         users[username].title = title
         users[username].video_port = video_sock.getsockname()[1]
         users[username].audio_port = audio_sock.getsockname()[1]
-        print(audio_sock.getsockname()[1])
         streams.append(username)
     t1 = threading.Thread(target=get_frames, args=(username, video_sock, ip.decode()))
     t2 = threading.Thread(target=get_audio, args=(username, audio_sock, ip.decode()))
@@ -173,19 +172,23 @@ def start_stream(username, title, ip):
 
 def get_frames(username, sock, ip):
     while True:
-        data, addr = sock.recvfrom(1000000)
+        try:
+            data, addr = sock.recvfrom(1000000)
+        except Exception as e:
+            print(f'Error: {e}')
+            continue
         if addr[0] != ip:
             continue
         if data == b'':
             break
         threading.Thread(target=send_frames, args=(users[username].viewers, data, sock)).start()
-        cv2.imshow('frame', cv2.imdecode(pickle.loads(data), cv2.IMREAD_COLOR))
     sock.close()
 
 
 def send_frames(viewers, data, sock):
     with users_lock:
         for viewer in viewers:
+            print((viewer.ip, STREAM_PORT))
             sock.sendto(data, (viewer.ip, STREAM_PORT))
 
 
@@ -228,7 +231,7 @@ def get_audio(username, sock, ip):
 
 def send_audio(socks, in_data):
     for sock in socks:
-        sock.sendall(in_data)
+        sock.send(in_data)
 
 
 def stop_stream(username):

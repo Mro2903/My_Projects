@@ -66,9 +66,8 @@ class Stream(Image):
             return
         try:
             data, addr = self.sock.recvfrom(1000000)
-        except socket.timeout:
-            return
-        if not data:
+        except Exception as e:
+            print(e)
             return
         data = zlib.decompress(data)
         frame = cv2.imdecode(pickle.loads(data), cv2.IMREAD_COLOR)
@@ -316,7 +315,7 @@ class ClientApp(MDApp):
 
     def send_audio(self, audio_sock):
         def callback_record(in_data, frame_count, time_info, status):
-            audio_sock.sendall(in_data)
+            audio_sock.send(in_data)
             return in_data, pyaudio.paContinue
 
         p = pyaudio.PyAudio()
@@ -370,7 +369,7 @@ class ClientApp(MDApp):
         if data.split(b'~')[1] == b'WTSR' and base64.b64decode(data.split(b'~')[2]) != b'Not streaming':
             self.root.ids["Watch_layout"].children[0].title = base64.b64decode(data.split(b'~')[4]).decode()
             video_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            video_sock.bind(('127.0.0.1', int(base64.b64decode(data.split(b'~')[2]).decode())))
+            video_sock.bind(('127.0.0.1', int(sys.argv[3])))
             audio_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             audio_sock.connect((sys.argv[1], int(base64.b64decode(data.split(b'~')[3]).decode())))
             self.root.ids["Watch_layout"].add_widget(Stream(video_sock, 30))
