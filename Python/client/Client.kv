@@ -369,6 +369,7 @@ Screen:
             MDBoxLayout:
                 orientation: "vertical"
                 MDTopAppBar:
+                    id: Stream_top_app_bar
                     title: "Stream"
                     specific_text_color: 1, 1, 1, 1
                     left_action_items: [["arrow-left", lambda x: app.stop_stream()]]
@@ -405,7 +406,7 @@ Screen:
                             id: Stream_video
                             orientation: "vertical"
                             MDLabel:
-                                text: "Stream"
+                                text: "views: 0"
                                 font_size: "24sp"
                                 halign: "center"
                                 size_hint_y: None
@@ -423,6 +424,13 @@ Screen:
                     title: "Watch"
                     specific_text_color: 1, 1, 1, 1
                     left_action_items: [["arrow-left", lambda x: app.stop_watch()]]
+                MDLabel:
+                    text: "views: 0"
+                    font_size: "24sp"
+                    halign: "center"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+                    padding_y: "15dp"
 
 
 

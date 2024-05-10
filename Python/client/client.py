@@ -1,6 +1,7 @@
 __author__ = 'Omri'
 
 import zlib
+import time
 import pyaudio
 import networks
 import threading
@@ -79,7 +80,6 @@ class Stream(Image):
         image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
         # display image from the texture
         self.texture = image_texture
-
 
 
 class ClientApp(MDApp):
@@ -266,7 +266,7 @@ class ClientApp(MDApp):
                 source = f'tmp/{user.decode()}.png'
             self.root.ids["Feed_list"].add_widget(TwoLineAvatarListItem(ImageLeftWidget(source=source,
                                                                                         on_press=lambda
-                                                                                            x: self.get_profile(
+                                                                                        x: self.get_profile(
                                                                                             x.parent.parent.text)),
                                                                         text=user.decode(),
                                                                         secondary_text=base64.b64decode(
@@ -282,7 +282,7 @@ class ClientApp(MDApp):
         if data.split(b'~')[1] != b'STMR':
             self.pop_up(base64.b64decode(data.split(b'~')[-1]).decode())
             return
-        self.root.ids["Stream_video"].children[0].text = title
+        self.root.ids["Stream_top_app_bar"].title = title
         self.capture = cv2.VideoCapture(0)
         self.capture.set(3, 640)
         self.capture.set(4, 480)
@@ -290,10 +290,12 @@ class ClientApp(MDApp):
         audio_port = int(base64.b64decode(data.split(b'~')[-1]).decode())
         audio_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         audio_sock.connect((sys.argv[1], audio_port))
-        t2 = threading.Thread(target=self.send_audio, args=(audio_sock,))
         t1 = threading.Thread(target=self.send_frames, args=(video_port,))
+        t2 = threading.Thread(target=self.send_audio, args=(audio_sock,))
+        t3 = threading.Thread(target=self.get_viewers)
         t1.start()
         t2.start()
+        t3.start()
         self.root.ids["Stream_video"].add_widget(Camara(capture=self.capture, fps=30))
 
         self.change_screen("screen_manager_stream", "Stream_view")
@@ -333,6 +335,19 @@ class ClientApp(MDApp):
         stream.close()
         audio_sock.close()
 
+    def get_viewers(self, label_id='Stream_video'):
+        while True:
+            time.sleep(5)
+            if not self.capture and len(self.root.ids["Watch_layout"].children) != 3:
+                break
+            networks.send_data(self.sock, b'GETV', self.aes_key)
+            data = networks.recv_by_size(self.sock, self.aes_key)
+            if data.split(b'~')[1] == b'GTVR':
+                self.root.ids[label_id].children[1].text = 'views: ' + base64.b64decode(
+                    data.split(b'~')[-1]).decode()
+            else:
+                self.pop_up(base64.b64decode(data.split(b'~')[-1]).decode())
+
     def play_audio(self, audio_sock):
         def callback_play(in_data, frame_count, time_info, status):
             in_data = audio_sock.recv(50000)
@@ -346,16 +361,18 @@ class ClientApp(MDApp):
                         output=True,
                         stream_callback=callback_play)
         stream.start_stream()
-        while stream.is_active() and len(self.root.ids["Watch_layout"].children) == 2:
+        while stream.is_active() and len(self.root.ids["Watch_layout"].children) == 3:
             pass
         stream.stop_stream()
         stream.close()
         audio_sock.close()
 
     def stop_stream(self):
-        if self.capture != None:
+        if self.capture is not None:
             networks.send_data(self.sock, b'STOP', self.aes_key)
             self.root.ids["Stream_video"].remove_widget(self.root.ids["Stream_video"].children[0])
+            self.root.ids["Stream_video"].children[0].title = 'views: 0'
+            self.root.ids["Stream_top_app_bar"].title = 'Stream'
             self.capture.release()
             self.capture = None
             networks.recv_by_size(self.sock, self.aes_key)
@@ -366,13 +383,14 @@ class ClientApp(MDApp):
         networks.send_data(self.sock, b'WSTM~' + base64.b64encode(streamer.encode()) + b'~' +
                            base64.b64encode(self.sock.getsockname()[0].encode()), self.aes_key)
         data = networks.recv_by_size(self.sock, self.aes_key)
-        if data.split(b'~')[1] == b'WTSR' and base64.b64decode(data.split(b'~')[2]) != b'Not streaming':
-            self.root.ids["Watch_layout"].children[0].title = base64.b64decode(data.split(b'~')[4]).decode()
+        if data.split(b'~')[1] == b'WTSR' and base64.b64decode(data.split(b'~')[-1]) != b'Not streaming':
+            self.root.ids["Watch_layout"].children[0].title = base64.b64decode(data.split(b'~')[3]).decode()
             video_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             video_sock.bind(('127.0.0.1', int(sys.argv[3])))
             audio_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            audio_sock.connect((sys.argv[1], int(base64.b64decode(data.split(b'~')[3]).decode())))
+            audio_sock.connect((sys.argv[1], int(base64.b64decode(data.split(b'~')[2]).decode())))
             self.root.ids["Watch_layout"].add_widget(Stream(video_sock, 30))
+            threading.Thread(target=self.get_viewers, args=('Watch_layout',)).start()
             t = threading.Thread(target=self.play_audio, args=(audio_sock,))
             t.start()
             self.change_screen("screen_manager_authentication", "Watch")
@@ -381,13 +399,13 @@ class ClientApp(MDApp):
         else:
             self.pop_up(base64.b64decode(data.split(b'~')[-1]).decode())
 
-
     def stop_watch(self):
         networks.send_data(self.sock, b'STWS', self.aes_key)
         data = networks.recv_by_size(self.sock, self.aes_key)
         self.root.ids["Watch_layout"].children[0].stop = True
         self.root.ids["Watch_layout"].children[0].sock.close()
         self.root.ids["Watch_layout"].remove_widget(self.root.ids["Watch_layout"].children[0])
+        self.root.ids["Watch_layout"].children[0].text = "views: 0"
         self.change_screen("screen_manager_authentication", "Home")
         self.pop_up(base64.b64decode(data.split(b'~')[-1]).decode())
 

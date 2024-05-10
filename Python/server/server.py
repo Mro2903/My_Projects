@@ -9,9 +9,6 @@ import traceback
 import pickle
 import random
 import string
-import zlib
-
-import cv2
 import pyaudio
 from Crypto.Hash import SHA256
 import smtplib
@@ -188,13 +185,17 @@ def get_frames(username, sock, ip):
 def send_frames(viewers, data, sock):
     with users_lock:
         for viewer in viewers:
-            print((viewer.ip, STREAM_PORT))
             sock.sendto(data, (viewer.ip, STREAM_PORT))
 
 
 def get_audio(username, sock, ip):
     sock.listen(5)
-    streamer, addr = sock.accept()
+    while True:
+        streamer, addr = sock.accept()
+        if addr[0] != ip:
+            streamer.close()
+            continue
+        break
 
     def callback_play(in_data, frame_count, time_info, status):
         in_data = streamer.recv(50000)
@@ -231,7 +232,10 @@ def get_audio(username, sock, ip):
 
 def send_audio(socks, in_data):
     for sock in socks:
-        sock.send(in_data)
+        try:
+            sock.send(in_data)
+        except ConnectionResetError:
+            continue
 
 
 def stop_stream(username):
@@ -255,7 +259,7 @@ def watch_stream(username, streamer, ip):
         users[username].watching = streamer
         users[streamer].viewers.append(Viewer(username, ip, None))
         title = users[streamer].title
-    return str(users[streamer].video_port).encode(), str(users[streamer].audio_port).encode(), title
+    return str(users[streamer].audio_port).encode(), title
 
 
 def stop_watch(username):
@@ -399,27 +403,43 @@ def handle_home_request(request_code, fields, username):
             return b'005', 'Home'
         return b'UFOR~' + base64.b64encode(unfollow(username, fields[0])), 'Home'
     elif request_code == 'STRM' and len(fields) == 2:
-        return b'STMR~' + start_stream(username, fields[0], fields[1]), 'Home'
-    elif request_code == 'STOP' and len(fields) == 0:
-        return b'STOR~' + base64.b64encode(stop_stream(username)), 'Home'
+        return b'STMR~' + start_stream(username, fields[0], fields[1]), 'streaming'
     elif request_code == 'WSTM' and len(fields) == 2:
         if fields[0] not in streams:
             return b'005', 'Home'
-        video_port, audio_port, title = watch_stream(username, fields[0], fields[1])
-        return (b'WTSR~' + base64.b64encode(video_port) + b'~' +
-                base64.b64encode(audio_port) + b'~' +
-                base64.b64encode(title), 'Home')
-    elif request_code == 'SMSG' and len(fields) == 1:
-        return b'SMSR~' + base64.b64encode(get_status(fields[0])), 'Home'
-    elif request_code == 'STWS' and len(fields) == 0:
-        answer = stop_watch(username)
-        if answer == b'005':
-            return answer, 'Home'
-        return b'STWR~' + answer, 'Home'
+        audio_port, title = watch_stream(username, fields[0], fields[1])
+        return b'WTSR~' + base64.b64encode(audio_port) + b'~' + base64.b64encode(title), 'watching'
     else:
         if request_code not in ['GTUD', 'GTUL', 'CHPI', 'CHDS', 'FOLL', 'UNFL', 'STRM', 'STOP', 'WSTM', 'STWS']:
             return b'002', 'Home'
         return b'004', 'Home'
+
+
+def handle_stream_request(request_code, fields, username):
+    if request_code == 'STOP' and len(fields) == 0:
+        return b'STOR~' + base64.b64encode(stop_stream(username)), 'Home'
+    elif request_code == 'GETV' and len(fields) == 0:
+        with users_lock:
+            return b'GTVR~' + base64.b64encode(str(len(users[username].viewers)).encode()), 'streaming'
+    else:
+        if request_code != 'STOP':
+            return b'002', 'streaming'
+        return b'004', 'streaming'
+
+
+def handle_watch_request(request_code, fields, username):
+    if request_code == 'STWS' and len(fields) == 0:
+        answer = stop_watch(username)
+        if answer == b'005':
+            return answer, 'Home'
+        return b'STWR~' + answer, 'Home'
+    elif request_code == 'GETV' and len(fields) == 0:
+        with users_lock:
+            return b'GTVR~' + base64.b64encode(str(len(users[users[username].watching].viewers)).encode()), 'watching'
+    else:
+        if request_code != 'STWS':
+            return b'002', 'watching'
+        return b'004', 'watching'
 
 
 def protocol_build_reply(request, state, username):
@@ -427,6 +447,8 @@ def protocol_build_reply(request, state, username):
     request_code = request[:4].decode()
     try:
         if request_code == 'CNCL':
+            if state == 'streaming':
+                stop_stream(username)
             return b'CNCR', 'anonymous'
         if state == 'anonymous':
             reply, state = handle_anonymous_request(request_code, fields)
@@ -438,13 +460,17 @@ def protocol_build_reply(request, state, username):
             reply, state = handle_change_password_request(request_code, fields, username)
         elif state == 'Home':
             reply, state = handle_home_request(request_code, fields, username)
+        elif state == 'streaming':
+            reply, state = handle_stream_request(request_code, fields, username)
+        elif state == 'watching':
+            reply, state = handle_watch_request(request_code, fields, username)
         else:
             reply, state = b'003', 'anonymous'
         if len(reply) == 3:
             return error_message(reply), state
         return reply, state
-    except Exception:
-        print(traceback.format_exc())
+    except Exception as e:
+        print(e)
         return error_message(b'001'), state
 
 
@@ -552,20 +578,21 @@ def main():
     srv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     i = 1
-    while True:
-        print('\nMain thread: before accepting ...')
-        cli_sock, addr = srv_sock.accept()
-        t = threading.Thread(target=handle_client, args=(cli_sock, str(i), addr))
-        t.start()
-        i += 1
-        threads.append(t)
-
-    all_to_die = True
-    print('Main thread: waiting to all clients to die')
-    for t in threads:
-        t.join()
-    srv_sock.close()
-    print('Bye ..')
+    try:
+        while True:
+            print('\nMain thread: before accepting ...')
+            cli_sock, addr = srv_sock.accept()
+            t = threading.Thread(target=handle_client, args=(cli_sock, str(i), addr))
+            t.start()
+            i += 1
+            threads.append(t)
+    except KeyboardInterrupt:
+        all_to_die = True
+        print('Main thread: waiting to all clients to die')
+        for t in threads:
+            t.join()
+        srv_sock.close()
+        print('Bye ..')
 
 
 if __name__ == '__main__':
