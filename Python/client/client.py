@@ -361,8 +361,10 @@ class ClientApp(MDApp):
                         output=True,
                         stream_callback=callback_play)
         stream.start_stream()
-        while stream.is_active() and len(self.root.ids["Watch_layout"].children) == 3:
-            pass
+        while len(self.root.ids["Watch_layout"].children) == 3:
+            if not stream.is_active():
+                stream.stop_stream()
+                stream.start_stream()
         stream.stop_stream()
         stream.close()
         audio_sock.close()
@@ -386,7 +388,7 @@ class ClientApp(MDApp):
         if data.split(b'~')[1] == b'WTSR' and base64.b64decode(data.split(b'~')[-1]) != b'Not streaming':
             self.root.ids["Watch_layout"].children[0].title = base64.b64decode(data.split(b'~')[3]).decode()
             video_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            video_sock.bind(('127.0.0.1', int(sys.argv[3])))
+            video_sock.bind(('0.0.0.0', int(sys.argv[3])))
             audio_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             audio_sock.connect((sys.argv[1], int(base64.b64decode(data.split(b'~')[2]).decode())))
             self.root.ids["Watch_layout"].add_widget(Stream(video_sock, 30))
@@ -483,7 +485,15 @@ if __name__ == '__main__':
     if connected:
         aes_key = networks.AES_key_exchange(sock)
         app = ClientApp(sock, aes_key)
-        app.run()
+        try:
+            app.run()
+        except KeyboardInterrupt as e:
+            pass
+
+        networks.send_data(sock, b'CNCL', aes_key)
+        networks.recv_by_size(sock, aes_key)
+        networks.send_data(sock, b'EXIT', aes_key)
+        sock.close()
         tmp_files = glob.glob('tmp/*')
         for f in tmp_files:
             os.remove(f)

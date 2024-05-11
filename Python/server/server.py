@@ -235,7 +235,7 @@ def send_audio(socks, in_data):
         try:
             sock.send(in_data)
         except ConnectionResetError:
-            continue
+            print(sock.getpeername()[0] + " has disconnected")
 
 
 def stop_stream(username):
@@ -253,8 +253,6 @@ def stop_stream(username):
 
 
 def watch_stream(username, streamer, ip):
-    if streamer not in streams:
-        return b'Not streaming'
     with users_lock:
         users[username].watching = streamer
         users[streamer].viewers.append(Viewer(username, ip, None))
@@ -330,6 +328,8 @@ def handle_anonymous_request(request_code, fields):
         if verification != b'WrongUsername':
             return b'2FAR', 'ForgotPassword'
         return b'FGPR' + b'~' + base64.b64encode(b'WrongUsername'), 'anonymous'
+    elif request_code == 'EXIT' and len(fields) == 0:
+        return b'EXIT', 'anonymous'
     else:
         if request_code not in ['SNGU', 'LOGI', 'FGPS']:
             return b'002', 'anonymous'
@@ -406,7 +406,7 @@ def handle_home_request(request_code, fields, username):
         return b'STMR~' + start_stream(username, fields[0], fields[1]), 'streaming'
     elif request_code == 'WSTM' and len(fields) == 2:
         if fields[0] not in streams:
-            return b'005', 'Home'
+            return b'WTSR~' + base64.b64decode(b'Not streaming')
         audio_port, title = watch_stream(username, fields[0], fields[1])
         return b'WTSR~' + base64.b64encode(audio_port) + b'~' + base64.b64encode(title), 'watching'
     else:
@@ -422,7 +422,7 @@ def handle_stream_request(request_code, fields, username):
         with users_lock:
             return b'GTVR~' + base64.b64encode(str(len(users[username].viewers)).encode()), 'streaming'
     else:
-        if request_code != 'STOP':
+        if request_code not in ['STOP', 'GETV']:
             return b'002', 'streaming'
         return b'004', 'streaming'
 
@@ -437,7 +437,7 @@ def handle_watch_request(request_code, fields, username):
         with users_lock:
             return b'GTVR~' + base64.b64encode(str(len(users[users[username].watching].viewers)).encode()), 'watching'
     else:
-        if request_code != 'STWS':
+        if request_code not in ['STWS', 'GETV']:
             return b'002', 'watching'
         return b'004', 'watching'
 
@@ -449,6 +449,8 @@ def protocol_build_reply(request, state, username):
         if request_code == 'CNCL':
             if state == 'streaming':
                 stop_stream(username)
+            elif state == 'watching':
+                stop_watch(username)
             return b'CNCR', 'anonymous'
         if state == 'anonymous':
             reply, state = handle_anonymous_request(request_code, fields)
@@ -519,7 +521,7 @@ def handle_client(sock, tid, addr):
                 username = base64.b64decode(byte_data.split(b'~')[1])
                 with users_lock:
                     users[username].online = True
-            elif byte_data[:4] == b'CNCL':
+            elif byte_data[:4] == b'CNCL' and state != 'anonymous':
                 with users_lock:
                     users[username].online = False
                     users[username].streaming = False
@@ -528,9 +530,6 @@ def handle_client(sock, tid, addr):
             print(f'Client {tid} state: {state}')
             if to_send != b'':
                 networks.send_data(sock, to_send, aes_key, tid + ' S')
-            if finish:
-                networks.send_data(sock, b'EXTR', aes_key, tid + ' S')
-                break
         except socket.error as err:
             print(f'Socket Error exit client loop: err:  {err}')
             break
