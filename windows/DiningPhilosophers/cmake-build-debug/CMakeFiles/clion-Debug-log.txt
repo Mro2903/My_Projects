@@ -1,0 +1,3 @@
+C:\WINDOWS\system32\wsl.exe --distribution kali-linux --exec /bin/bash -c "export CMAKE_COLOR_DIAGNOSTICS=ON && export CLION_IDE=TRUE && export JETBRAINS_IDE=TRUE && cd /mnt/e/Repositorys/My_Projects/windows/DiningPhilosophers/cmake-build-debug && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G 'CodeBlocks - Unix Makefiles' -S /mnt/e/Repositorys/My_Projects/windows/DiningPhilosophers -B /mnt/e/Repositorys/My_Projects/windows/DiningPhilosophers/cmake-build-debug"
+<3>WSL (87) ERROR: CreateProcessParseCommon:763: Failed to translate E:\Repositorys\My_Projects\windows\DiningPhilosophers\cmake-build-debug
+/bin/bash: line 1: cd: /mnt/e/Repositorys/My_Projects/windows/DiningPhilosophers/cmake-build-debug: No such file or directory
