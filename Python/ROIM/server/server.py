@@ -89,7 +89,7 @@ def login(username, password):
 
 def send_email_verification(email_receiver):
     email_sender = "omribareket1@gmail.com"
-    email_password = "ugnw vyob dkfl ryog"
+    email_password = "xxx"
 
     em = EmailMessage()
     em['from'] = email_sender
